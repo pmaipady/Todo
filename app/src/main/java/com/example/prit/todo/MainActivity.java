@@ -1,5 +1,7 @@
 package com.example.prit.todo;
 
+import android.app.LauncherActivity;
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -9,8 +11,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -18,6 +24,8 @@ public class MainActivity extends ActionBarActivity {
     private ArrayList<String> items;
     private ArrayAdapter<String> itemsAdapter;
     private ListView lvItems;
+    private final int REQUEST_CODE = 20;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +41,7 @@ public class MainActivity extends ActionBarActivity {
         items.add("Pick up Laundry");
         items.add("Clean Dishes");
         setupListViewListener();
+        setupListViewOnclickListener();
     }
     private void setupListViewListener() {
         lvItems.setOnItemLongClickListener(
@@ -46,12 +55,41 @@ public class MainActivity extends ActionBarActivity {
                         itemsAdapter.notifyDataSetChanged();
                         // Return true consumes the long click event (marks it handled)
                         return true;
-
-
                     }
 
                 });
+    }
 
+    private void setupListViewOnclickListener() {
+
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                String ListItem = lvItems.getItemAtPosition(position).toString();
+                items.remove(position);
+                itemsAdapter.notifyDataSetChanged();
+                  Bundle basket= new Bundle();
+                  basket.putString("List", ListItem);
+                  Intent i = new Intent(MainActivity.this, EditItemActivity.class);
+                  i.putExtras(basket);
+                startActivityForResult(i, REQUEST_CODE); // brings up the second activity
+
+            }
+        });
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // REQUEST_CODE is defined above
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
+            // Extract name value from result extras
+            lvItems = (ListView) findViewById(R.id.lvItems);
+            itemsAdapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_list_item_1, items);
+            lvItems.setAdapter(itemsAdapter);
+            String name = data.getExtras().getString("name");
+            // Set the new text to List View
+            items.add(name);
+        }
     }
 
     public void onAddItem(View v) {
@@ -60,8 +98,6 @@ public class MainActivity extends ActionBarActivity {
         itemsAdapter.add(itemText);
         etNewItem.setText("");
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
